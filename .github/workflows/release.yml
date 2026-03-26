@@ -41,6 +41,9 @@ jobs:
           - target: x86_64-pc-windows-msvc
             os: windows-latest
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v6
       - name: Install Rust
