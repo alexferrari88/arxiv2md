@@ -9,25 +9,22 @@ pub fn parse_atom(xml: &str) -> Result<PaperMetadata> {
         .find(|node| node.is_element() && node.tag_name().name() == "entry")
         .ok_or_else(|| Arxiv2MdError::Metadata("atom feed missing entry".into()))?;
 
-    let mut metadata = PaperMetadata::default();
-    metadata.title = child_text(entry, "title");
-    metadata.abstract_text = child_text(entry, "summary");
-    metadata.published = child_text(entry, "published");
-    metadata.updated = child_text(entry, "updated");
-
-    metadata.authors = entry
-        .children()
-        .filter(|node| node.is_element() && node.tag_name().name() == "author")
-        .filter_map(|author| child_text(author, "name"))
-        .collect();
-
-    metadata.categories = entry
-        .children()
-        .filter(|node| node.is_element() && node.tag_name().name() == "category")
-        .filter_map(|category| category.attribute("term").map(ToOwned::to_owned))
-        .collect();
-
-    Ok(metadata)
+    Ok(PaperMetadata {
+        title: child_text(entry, "title"),
+        abstract_text: child_text(entry, "summary"),
+        published: child_text(entry, "published"),
+        updated: child_text(entry, "updated"),
+        authors: entry
+            .children()
+            .filter(|node| node.is_element() && node.tag_name().name() == "author")
+            .filter_map(|author| child_text(author, "name"))
+            .collect(),
+        categories: entry
+            .children()
+            .filter(|node| node.is_element() && node.tag_name().name() == "category")
+            .filter_map(|category| category.attribute("term").map(ToOwned::to_owned))
+            .collect(),
+    })
 }
 
 fn child_text(node: roxmltree::Node<'_, '_>, name: &str) -> Option<String> {

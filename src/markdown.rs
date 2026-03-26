@@ -142,10 +142,10 @@ fn render_fallback_document(
     resolved_via: crate::model::ResolvedVia,
 ) -> String {
     let mut blocks = Vec::new();
-    if options.frontmatter {
-        if let Ok(frontmatter) = generate_frontmatter(id, metadata, resolved_via) {
-            blocks.push(frontmatter);
-        }
+    if options.frontmatter
+        && let Ok(frontmatter) = generate_frontmatter(id, metadata, resolved_via)
+    {
+        blocks.push(frontmatter);
     }
     if let Some(title) = &metadata.title {
         blocks.push(format!("# {title}"));

@@ -62,30 +62,30 @@ fn resolve_document(
         ));
     }
 
-    if let Some(source) = fetch_bytes_maybe(client, cache_policy, "source.bin", &id.eprint_url)? {
-        if !looks_like_pdf(&source.body, source.content_type.as_deref()) {
-            match crate::latex::convert_source_archive(&source.body, &options.pandoc_path) {
-                Ok(markdown) => {
-                    let cleaned = crate::markdown::cleanup_generated_markdown(&markdown);
-                    let sections = crate::markdown::parse_markdown_sections(&cleaned);
-                    let fallback_markdown = if sections.is_empty() {
-                        Some(cleaned)
-                    } else {
-                        None
-                    };
-                    return Ok(PaperDocument {
-                        metadata,
-                        sections,
-                        fallback_markdown,
-                        resolved_via: ResolvedVia::LatexSource,
-                        supports_tree: true,
-                    });
-                }
-                Err(error) => warnings.push(format!(
-                    "source fallback failed for {} using {}: {}",
-                    id.normalized, options.pandoc_path, error
-                )),
+    if let Some(source) = fetch_bytes_maybe(client, cache_policy, "source.bin", &id.eprint_url)?
+        && !looks_like_pdf(&source.body, source.content_type.as_deref())
+    {
+        match crate::latex::convert_source_archive(&source.body, &options.pandoc_path) {
+            Ok(markdown) => {
+                let cleaned = crate::markdown::cleanup_generated_markdown(&markdown);
+                let sections = crate::markdown::parse_markdown_sections(&cleaned);
+                let fallback_markdown = if sections.is_empty() {
+                    Some(cleaned)
+                } else {
+                    None
+                };
+                return Ok(PaperDocument {
+                    metadata,
+                    sections,
+                    fallback_markdown,
+                    resolved_via: ResolvedVia::LatexSource,
+                    supports_tree: true,
+                });
             }
+            Err(error) => warnings.push(format!(
+                "source fallback failed for {} using {}: {}",
+                id.normalized, options.pandoc_path, error
+            )),
         }
     }
 

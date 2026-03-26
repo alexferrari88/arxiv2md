@@ -68,10 +68,7 @@ fn extract_sections(
         let name = heading.value().name();
         let level = name.trim_start_matches('h').parse::<u8>().unwrap_or(2);
         let classes = heading.value().classes().collect::<Vec<_>>();
-        if classes
-            .iter()
-            .any(|class_name| *class_name == "ltx_title_document")
-        {
+        if classes.contains(&"ltx_title_document") {
             continue;
         }
         if has_ancestor(&heading, "nav") || has_ancestor_class(&heading, "ltx_abstract") {
@@ -121,7 +118,7 @@ fn serialize_node(
             }
         }
         Node::Element(_) => {
-            let Some(element) = ElementRef::wrap(handle.clone()) else {
+            let Some(element) = ElementRef::wrap(*handle) else {
                 return Ok(Vec::new());
             };
             let name = element.value().name();
@@ -239,7 +236,7 @@ fn serialize_inline_node(
     match node {
         Node::Text(text) => Ok(text.text.to_string()),
         Node::Element(_) => {
-            let Some(element) = ElementRef::wrap(handle.clone()) else {
+            let Some(element) = ElementRef::wrap(*handle) else {
                 return Ok(String::new());
             };
             let name = element.value().name();
@@ -309,10 +306,10 @@ fn serialize_list(
     for item in element.select(&li_selector) {
         let mut item_text = String::new();
         for child in item.children() {
-            if let Some(child_element) = ElementRef::wrap(child.clone()) {
-                if nested_selector.matches(&child_element) {
-                    continue;
-                }
+            if let Some(child_element) = ElementRef::wrap(child)
+                && nested_selector.matches(&child_element)
+            {
+                continue;
             }
             item_text.push_str(&serialize_inline_node(
                 child.value(),
@@ -487,11 +484,11 @@ fn collect_section_fragment(heading: &ElementRef<'_>) -> String {
     let heading_html = heading.html();
     let mut parent_section = None;
     for ancestor in heading.ancestors() {
-        if let Some(element) = ElementRef::wrap(ancestor) {
-            if element.value().name() == "section" {
-                parent_section = Some(element);
-                break;
-            }
+        if let Some(element) = ElementRef::wrap(ancestor)
+            && element.value().name() == "section"
+        {
+            parent_section = Some(element);
+            break;
         }
     }
     let Some(section) = parent_section else {
@@ -501,7 +498,7 @@ fn collect_section_fragment(heading: &ElementRef<'_>) -> String {
     let mut started = false;
     let mut parts = Vec::new();
     for child in section.children() {
-        if let Some(element) = ElementRef::wrap(child.clone()) {
+        if let Some(element) = ElementRef::wrap(child) {
             if !started {
                 if element.html() == heading_html {
                     started = true;
@@ -512,10 +509,8 @@ fn collect_section_fragment(heading: &ElementRef<'_>) -> String {
                 continue;
             }
             parts.push(element.html());
-        } else if started {
-            if let Node::Text(text) = child.value() {
-                parts.push(text.text.to_string());
-            }
+        } else if started && let Node::Text(text) = child.value() {
+            parts.push(text.text.to_string());
         }
     }
     parts.join("")
