@@ -1,56 +1,120 @@
 # arxiv2md
 
-`arxiv2md` is a Rust CLI that converts arXiv papers into Markdown optimized for LLM agents.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Cargo](https://img.shields.io/badge/rust-2024-orange.svg)](https://www.rust-lang.org/)
 
-It resolves papers using this fallback chain:
+`arxiv2md` is a Rust-based CLI tool designed to convert arXiv papers into clean, high-signal Markdown optimized for Large Language Model (LLM) agents and research workflows. It handles everything from the latest HTML representations to legacy LaTeX source archives and PDF extraction.
 
-1. `arxiv.org/html/<id>`
-2. `ar5iv.labs.arxiv.org/html/<id>`
-3. local LaTeX conversion from `arxiv.org/e-print/<id>` via `pandoc`
-4. PDF text extraction from `arxiv.org/pdf/<id>.pdf`
+## Key Features
 
-## Why this tool
+- **LLM-Ready Markdown:** Generates clean, low-noise Markdown suitable for context windows.
+- **Robust Fallback Chain:** Resolves papers through four different stages to ensure the best possible extraction quality.
+- **Section Filtering:** Include or exclude specific sections (e.g., Abstract, Introduction, Conclusion) to focus on relevant content.
+- **Metadata Support:** Optional YAML frontmatter generation using the arXiv Atom API.
+- **Smart Caching:** Persists fetched artifacts (HTML, PDF, source, metadata) locally to avoid redundant network requests.
+- **Citation Management:** Optionally remove inline citations (e.g., `[1, 2]`) for even cleaner text.
 
-- Markdown-first output
-- stdout by default
-- low-noise defaults for agent workflows
-- support for old and new arXiv identifiers
-- cached fetch artifacts for repeated runs
+## Core Fallback Strategy
 
-## Install
+`arxiv2md` attempts to resolve papers using the following prioritized chain:
 
-Download pre-built binaries from the [Releases](https://github.com/alexferrari88/arxiv2md/releases) page for Windows, Linux, and macOS.
+1.  **arXiv HTML:** Direct extraction from the official HTML representation (`arxiv.org/html/<id>`).
+2.  **ar5iv:** Extraction from the ar5iv labs representation (`ar5iv.labs.arxiv.org/html/<id>`).
+3.  **LaTeX Source:** Download of the source archive (`arxiv.org/e-print/<id>`) and conversion via `pandoc`.
+4.  **PDF Extraction:** Best-effort text extraction from the official PDF (`arxiv.org/pdf/<id>.pdf`).
 
-Alternatively, build from source:
+## Prerequisites
+
+For full functionality, especially the **LaTeX Source fallback**, you must have [Pandoc](https://pandoc.org/) installed and available on your system's `PATH`.
+
+## Installation
+
+### From Source (using Cargo)
+
+Ensure you have the Rust toolchain installed (2024 edition supported).
 
 ```bash
+git clone https://github.com/alexferrari88/arxiv2md
+cd arxiv2md
 cargo install --path .
 ```
 
-For full source-fallback coverage, install `pandoc` and ensure it is on `PATH`.
+### Pre-built Binaries
+
+Download the latest pre-built binaries for Windows, Linux, and macOS from the [Releases](https://github.com/alexferrari88/arxiv2md/releases) page.
 
 ## Usage
 
+### Basic Usage
+
+Convert a paper and output to stdout:
+
 ```bash
 arxiv2md 2501.11120
-arxiv2md 1706.03762 --frontmatter -o paper.md
-arxiv2md hep-th/9901001 --keep-refs --keep-toc
+```
+
+### Advanced Examples
+
+Save to a file with YAML frontmatter:
+```bash
+arxiv2md 1706.03762 --frontmatter -o transformer.md
+```
+
+Include only specific sections:
+```bash
 arxiv2md 2501.11120 --section-filter-mode include --sections "Abstract,Introduction"
 ```
 
-## Flags
+Keep references and table of contents:
+```bash
+arxiv2md hep-th/9901001 --keep-refs --keep-toc
+```
 
-- `-o, --output <PATH>`: output file, default is stdout. Use `-` for stdout explicitly.
-- `--frontmatter`: prepend YAML metadata.
-- `--keep-refs`: keep references/bibliography sections.
-- `--keep-toc`: include a generated table of contents.
-- `--remove-inline-citations`: remove inline citations when supported by the resolved format.
-- `--section-filter-mode <include|exclude>` with `--sections` or repeatable `--section`
-- `--include-tree`: include a plain section tree before the body when section structure is available.
-- `--refresh`: bypass the local artifact cache.
+Remove inline citations for a cleaner reading experience:
+```bash
+arxiv2md 2501.11120 --remove-inline-citations
+```
 
-## Notes
+### Command-Line Options
 
-- HTML and ar5iv paths produce the cleanest results.
-- If `pandoc` is unavailable and the tool reaches the LaTeX fallback stage, it warns and falls through to PDF extraction.
-- PDF fallback is intentionally best-effort and may not preserve section structure.
+| Flag | Description |
+| :--- | :--- |
+| `-o, --output <PATH>` | Output file path (defaults to stdout). |
+| `--frontmatter` | Prepend YAML metadata to the output. |
+| `--keep-refs` | Keep references/bibliography sections. |
+| `--keep-toc` | Include a generated table of contents. |
+| `--remove-inline-citations` | Remove inline citations (e.g., `[1]`) when supported. |
+| `--section-filter-mode` | Set to `include` or `exclude` for section filtering. |
+| `--sections <LIST>` | Comma-separated list of sections to include/exclude. |
+| `--include-tree` | Prepend a plain text section tree before the body. |
+| `--refresh` | Bypass the local artifact cache and fetch fresh data. |
+
+## Caching
+
+`arxiv2md` caches all fetched artifacts (HTML, PDF, source archives, and metadata) in your system's standard cache directory. This ensures that subsequent runs for the same paper are near-instant and respect arXiv's rate limits.
+
+- **Linux:** `~/.cache/arxiv2md`
+- **macOS:** `~/Library/Caches/arxiv2md`
+- **Windows:** `%LOCALAPPDATA%\arxiv2md\cache`
+
+## Development
+
+### Building and Testing
+
+```bash
+# Build the project
+cargo build
+
+# Run unit and integration tests
+cargo test
+
+# Check for linting issues
+cargo clippy
+
+# Format the codebase
+cargo fmt
+```
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
