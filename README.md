@@ -19,6 +19,10 @@ It resolves papers using this fallback chain:
 
 ## Install
 
+Download pre-built binaries from the [Releases](https://github.com/alexferrari88/arxiv2md/releases) page for Windows, Linux, and macOS.
+
+Alternatively, build from source:
+
 ```bash
 cargo install --path .
 ```
