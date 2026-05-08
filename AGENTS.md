@@ -23,3 +23,7 @@ This repository uses Rust’s built-in test framework plus `assert_cmd` and `pre
 
 ## Commit & Pull Request Guidelines
 Current history uses concise Conventional Commit subjects, for example `feat: add first implementation`. Keep using that style (`feat:`, `fix:`, `docs:`, `test:`) and write subjects in the imperative mood. Pull requests should summarize the behavior change, note any new CLI flags or fallback-path changes, and include representative commands or output snippets when they help reviewers validate the result.
+
+## Git hygiene
+
+- After committing changes in this repository, push the branch to its configured remote.
